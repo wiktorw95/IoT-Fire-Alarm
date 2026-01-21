@@ -1,6 +1,4 @@
-#define BLYNK_TEMPLATE_ID "TMPL4g3TI7-4v"
-#define BLYNK_TEMPLATE_NAME "Quickstart Template"
-#define BLYNK_AUTH_TOKEN "TraOIL7mPhCm33YalyL85dcZHH9KQiqT"
+#include "secrets.h"
 
 #include <WiFi.h>
 #include <Wire.h>
@@ -8,19 +6,17 @@
 #include <Adafruit_NeoPixel.h>
 #include <BlynkSimpleEsp32.h>
 
-// -------- BLYNK / WIFI --------
 char auth[] = BLYNK_AUTH_TOKEN;
-char ssid[] = "Phone_1_7635";
-char pass[] = "12345687";
+char ssid[] = WIFI_SSID;
+char pass[] = WIFI_PASS;
 
-// -------- PINY --------
+
 #define LED_PIN     4
 #define SDA_PIN     8
 #define SCL_PIN     9
 #define NUM_LEDS    8
 #define BUZZER_PIN  5
 
-// -------- PROGI --------
 #define TEMP_ALARM  30.0
 
 Adafruit_BME280 bme;
@@ -30,7 +26,6 @@ BlynkTimer timer;
 // zapamiętanie poprzedniej temperatury
 float lastTemp = -100.0;
 
-// ---------------- WIFI ----------------
 void connectWiFi() {
   Serial.print("Łączenie z WiFi: ");
   Serial.println(ssid);
@@ -53,11 +48,10 @@ void connectWiFi() {
     Serial.print("IP: ");
     Serial.println(WiFi.localIP());
   } else {
-    Serial.println("\n❌ WiFi NIE połączone");
+    Serial.println("\n WiFi NIE połączone");
   }
 }
 
-// ---------------- LED ----------------
 void visualizeTemperature(float t) {
   t = constrain(t, 25, 30);
 
@@ -70,7 +64,6 @@ void visualizeTemperature(float t) {
   strip.show();
 }
 
-// ---------------- TEMPERATURA ----------------
 void readTemperature() {
   float temp = bme.readTemperature();
   if (isnan(temp)) return;
@@ -87,7 +80,6 @@ void readTemperature() {
     digitalWrite(BUZZER_PIN, LOW);
   }
 
-  // 🔔 POWIADOMIENIE – TYLKO przy PRZEKROCZENIU progu
   if (lastTemp <= TEMP_ALARM && temp > TEMP_ALARM && Blynk.connected()) {
     Blynk.logEvent(
       "alarm_temperatury",
@@ -98,7 +90,6 @@ void readTemperature() {
   lastTemp = temp;
 }
 
-// ---------------- SETUP ----------------
 void setup() {
   Serial.begin(115200);
   delay(1000);
@@ -114,26 +105,24 @@ void setup() {
   Wire.begin(SDA_PIN, SCL_PIN);
 
   if (!bme.begin(0x76)) {
-    Serial.println("❌ BME280 nie wykryty");
+    Serial.println(" BME280 nie wykryty");
     while (1);
   }
 
   connectWiFi();
 
-  // Blynk bez blokowania
   Blynk.config(auth);
   Blynk.connect(5000);
 
   if (Blynk.connected())
     Serial.println("✅ Blynk połączony");
   else
-    Serial.println("❌ Blynk NIE połączony");
+    Serial.println(" Blynk NIE połączony");
 
-  // odczyt co 1 sekundę
+
   timer.setInterval(1000L, readTemperature);
 }
 
-// ---------------- LOOP ----------------
 void loop() {
   if (Blynk.connected()) {
     Blynk.run();
